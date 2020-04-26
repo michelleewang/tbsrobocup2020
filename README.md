@@ -6,6 +6,6 @@ It has been prepared in particular for [RoboCup@Home Education Online Challenge 
 
 ## Instructions
 
-Fork this repository, make it private and use it to develop the code for your challenge.
+[Duplicate the repository](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/duplicating-a-repository), make it private and use it to develop the code for your challenge.
 
 
