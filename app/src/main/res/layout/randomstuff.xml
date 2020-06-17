@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Please approach me to begin."
+        android:text="Thank you."
         android:textColor="#000000"
         android:textSize="36sp"
         android:textStyle="bold"

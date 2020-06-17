@@ -18,6 +18,9 @@ import com.aldebaran.qi.sdk.builder.TopicBuilder;
 import com.aldebaran.qi.sdk.design.activity.RobotActivity;
 import com.aldebaran.qi.sdk.object.actuation.Animate;
 import com.aldebaran.qi.sdk.object.actuation.Animation;
+import com.aldebaran.qi.sdk.object.conversation.AutonomousReactionImportance;
+import com.aldebaran.qi.sdk.object.conversation.AutonomousReactionValidity;
+import com.aldebaran.qi.sdk.object.conversation.Bookmark;
 import com.aldebaran.qi.sdk.object.conversation.Chat;
 import com.aldebaran.qi.sdk.object.conversation.QiChatVariable;
 import com.aldebaran.qi.sdk.object.conversation.QiChatbot;
@@ -26,12 +29,12 @@ import com.aldebaran.qi.sdk.object.conversation.Topic;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends RobotActivity implements RobotLifecycleCallbacks {
 
     int diagnosis = -2;
     Future<Void> execFuture;
-    private Button button;
     private QiContext qiContext = null;
     private CheckBox fever;
     private CheckBox cough;
@@ -45,10 +48,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private CheckBox diarrhea;
     private Button submit;
     private Boolean[] dumbArray;
-    private Say sayAction, startingQuestion, alive, sick, youaredead, diagnosing;
-    private Topic topic;
-    private QiChatbot qiChatbot;
-    private Chat chatAction;
+    private Say sayAction, startQuestion, alive, sick, youaredead, diagnosing, thankyou, instructions;
+    private Bookmark bookmark = null;
+    private Bookmark doneBookmark = null;
+    private Topic topic, topic2;
+    private QiChatbot qiChatbot, qiChatbot2;
+    private Chat chatAction, chatAction2;
     private QiChatVariable chatVariable;
     private String[] yesStringArray = {"yes", "yup", "affirmative", "yeah", "sure"};
     private List<String> yesStrings = Arrays.asList(yesStringArray);
@@ -57,7 +62,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.randomstuff);
+        setContentView(R.layout.activity_main);
         // Register the RobotLifecycleCallbacks to this Activity.
         QiSDK.register(this, this);
     }
@@ -84,7 +89,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 //            }
 //        });
 
-        startingQuestion = SayBuilder.with(qiContext)
+        startQuestion = SayBuilder.with(qiContext)
                 .withText("Hello. What are you here for today?")
                 .build();
 
@@ -104,6 +109,15 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 .withText("Diagnosing...")
                 .build();
 
+        instructions = SayBuilder.with(qiContext)
+                .withText(" Please indicate your symptoms on the screen below. Press Submit or inform me when finished.")
+                .build();
+
+        thankyou = SayBuilder.with(qiContext)
+                .withText("Thank you.")
+                .build();
+
+
         sayAction = SayBuilder.with(qiContext)
                 .withText("test")
                 .build();
@@ -116,20 +130,54 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 .withTopic(topic)
                 .build();
 
+        chatVariable = qiChatbot.variable("diagnosis");
+        qiChatbot.variable("diagnosis").setValue("");
+
         qiChatbot.addOnBookmarkReachedListener((bookmark) -> {
             if (bookmark.getName().equals("begun")) {
                 displayCheckboxes();
             } else if (bookmark.getName().equals("delay")) {
                 displayCheckboxes();
             } else if (bookmark.getName().equals("done") && !diagnosisDone) {
-//                defineCheckboxes();
-                performDiagnosis();
+                runOnUiThread(() -> performDiagnosis());
             }
         });
 
         chatAction = ChatBuilder.with(qiContext)
                 .withChatbot(qiChatbot)
                 .build();
+
+        topic2 = TopicBuilder.with(qiContext)
+                .withResource(R.raw.shortdiagnosis)
+                .build();
+
+        qiChatbot2 = QiChatbotBuilder.with(qiContext)
+                .withTopic(topic2)
+                .build();
+
+        chatVariable = qiChatbot2.variable("diagnosis");
+        qiChatbot2.variable("diagnosis").setValue("");
+
+        qiChatbot2.addOnBookmarkReachedListener((bookmark) -> {
+            if (bookmark.getName().equals("done") && !diagnosisDone) {
+                runOnUiThread(() -> performDiagnosis());
+            }
+        });
+
+        chatAction2 = ChatBuilder.with(qiContext)
+                .withChatbot(qiChatbot2)
+                .build();
+
+//        for (Map.Entry<String, Bookmark> entry : topic.getBookmarks().entrySet()) {
+//            Bookmark temp = entry.getValue();
+//            if (temp.getName() == "finaldiagnosis") {
+//                doneBookmark = temp;
+//                break;
+//            }
+//        }
+    }
+
+    public void initShortenedDiagnosis() {
     }
 
     @Override
@@ -143,40 +191,35 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     public void displayCheckboxes() {
-        execFuture.requestCancellation();
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                setContentView(R.layout.symptomcheckbox);
-                submit = findViewById((R.id.submitButton));
-                submit.setOnClickListener(v -> {
-                    //setContentView(R.layout.inprogress);
-                    defineCheckboxes();
-                    performDiagnosis();
-                });
-            }
-
-            public void defineCheckboxes() {
-                fever = findViewById(R.id.feverBox);
-                cough = findViewById(R.id.coughBox);
-                shortness = findViewById(R.id.shortnessBox);
-                trouble = findViewById(R.id.troubleBox);
-                fatigue = findViewById(R.id.fatigueBox);
-                chills = findViewById(R.id.chillBox);
-                headache = findViewById(R.id.headacheBox);
-                throat = findViewById(R.id.throatBox);
-                nausea = findViewById(R.id.nauseaBox);
-                diarrhea = findViewById(R.id.diarrheaBox);
-
-                dumbArray = new Boolean[]{fever.isChecked(), cough.isChecked(), shortness.isChecked(), trouble.isChecked(), fatigue.isChecked(), chills.isChecked(), headache.isChecked(), throat.isChecked(), nausea.isChecked(), diarrhea.isChecked()};
-            }
+        diagnosisDone = false;
+        runOnUiThread(() -> {
+            setContentView(R.layout.symptomcheckbox);
+            submit = findViewById((R.id.submitButton));
+            submit.setOnClickListener(v -> {
+                //setContentView(R.layout.inprogress);
+                performDiagnosis();
+            });
         });
     }
 
     public void performDiagnosis() {
+//        qiChatbot.goToBookmark(doneBookmark, AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
+        runOnUiThread(() -> {
+            fever = findViewById(R.id.feverBox);
+            cough = findViewById(R.id.coughBox);
+            shortness = findViewById(R.id.shortnessBox);
+            trouble = findViewById(R.id.troubleBox);
+            fatigue = findViewById(R.id.fatigueBox);
+            chills = findViewById(R.id.chillBox);
+            headache = findViewById(R.id.headacheBox);
+            throat = findViewById(R.id.throatBox);
+            nausea = findViewById(R.id.nauseaBox);
+            diarrhea = findViewById(R.id.diarrheaBox);
+
+            dumbArray = new Boolean[]{fever.isChecked(), cough.isChecked(), shortness.isChecked(), trouble.isChecked(), fatigue.isChecked(), chills.isChecked(), headache.isChecked(), throat.isChecked(), nausea.isChecked(), diarrhea.isChecked()};
+        });
         diagnosis = diagnose(dumbArray);
         diagnosisDone = true;
-        execFuture.requestCancellation();
         displayResults(diagnosis);
     }
 
@@ -186,11 +229,55 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 //        } catch (InterruptedException e) {
 //            e.printStackTrace();
 //        }
+        String result = null;
+//        final Boolean[] diagnoseAgain = {null};
         if (diagnosis == 0) {
-            runOnUiThread(() -> setContentView(R.layout.healthy));
+            result = " healthy.";
+            runOnUiThread(() -> {
+                setContentView(R.layout.healthy);
+                Button diagnoseButton = (Button) findViewById(R.id.diagnose);
+                Button exitButton = (Button) findViewById(R.id.exit);
+                diagnoseButton.setOnClickListener(v -> {
+                    restartProgram();
+                });
+                exitButton.setOnClickListener(v -> {
+                    exitProgram();
+                });
+            });
         } else if (diagnosis == 1) {
-            runOnUiThread(() -> setContentView(R.layout.sick));
+            result = " sick.";
+            runOnUiThread(() -> {
+                setContentView(R.layout.sick);
+                Button diagnoseButton = (Button) findViewById(R.id.diagnose2);
+                Button exitButton = (Button) findViewById(R.id.exit2);
+                diagnoseButton.setOnClickListener(v -> {
+                    restartProgram();
+                });
+                exitButton.setOnClickListener(v -> {
+                    exitProgram();
+                });
+            });
         }
+        String finalResult = result;
+//        runOnUiThread(() -> {qiChatbot.variable("diagnosis").setValue(finalResult);});
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    qiChatbot.variable("diagnosis").setValue(finalResult);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        thread.start();
+        execFuture.requestCancellation();
+//        if(diagnoseAgain[0]) {
+//            execFuture = chatAction.async().run();
+//            runOnUiThread(() -> {setContentView(R.layout.activity_main);});
+//        } else {
+//            runOnUiThread(() -> {setContentView(R.layout.randomstuff);});
+//        }
     }
 
     public int diagnose(Boolean[] dumbArray) {
@@ -206,5 +293,20 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         } else {
             return 0;
         }
+    }
+
+    public void restartProgram() {
+        initShortenedDiagnosis();
+        runOnUiThread(() -> {
+            instructions.async().run();
+            execFuture = chatAction2.async().run();
+//          setContentView(R.layout.activity_main);
+        });
+        displayCheckboxes();
+    }
+
+    public void exitProgram() {
+        runOnUiThread(() -> setContentView(R.layout.randomstuff));
+        thankyou.async().run();
     }
 }

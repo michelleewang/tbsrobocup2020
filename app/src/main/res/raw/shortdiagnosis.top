@@ -1,4 +1,4 @@
-topic: ~test()
+topic: ~shortdiagnosis()
 
 concept:(greeting) [hello hi hey "good morning" greetings]
 
@@ -11,15 +11,7 @@ concept: (diagnosis) [diagnosis Diagnosis]
 concept: (ready) ["I'm ready" ready]
 concept: (done) [done]
 
-u: (~greeting) ~startingQuestion
-    u1: (~diagnosis) ^nextProposal
-
-proposal: Would you like to begin your diagnosis now?
-    u1:(~no) Please tell me when you are ready. ^stayInScope
-    u1:(~yes) Please indicate your symptoms on the screen below. Press Submit or inform me when finished. %begun
-        u2: (~done) %done ^nextProposal
-    u1:(~ready) Please indicate your symptoms on the screen below. Press Submit or inform me when finished. %begun
-        u2: (~done) %done ^nextProposal
+u: (~done) %done ^nextProposal
 
 #proposal: %diagnose Thank you. Your diagnosis can be seen on-screen.
 
