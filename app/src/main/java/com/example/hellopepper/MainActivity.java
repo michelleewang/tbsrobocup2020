@@ -1,22 +1,63 @@
 package com.example.hellopepper;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Button;
+import android.widget.CheckBox;
 
+import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.QiSDK;
 import com.aldebaran.qi.sdk.RobotLifecycleCallbacks;
+import com.aldebaran.qi.sdk.builder.AnimateBuilder;
+import com.aldebaran.qi.sdk.builder.AnimationBuilder;
+import com.aldebaran.qi.sdk.builder.ChatBuilder;
+import com.aldebaran.qi.sdk.builder.QiChatbotBuilder;
 import com.aldebaran.qi.sdk.builder.SayBuilder;
+import com.aldebaran.qi.sdk.builder.TopicBuilder;
 import com.aldebaran.qi.sdk.design.activity.RobotActivity;
+import com.aldebaran.qi.sdk.object.actuation.Animate;
+import com.aldebaran.qi.sdk.object.actuation.Animation;
+import com.aldebaran.qi.sdk.object.conversation.Chat;
+import com.aldebaran.qi.sdk.object.conversation.QiChatVariable;
+import com.aldebaran.qi.sdk.object.conversation.QiChatbot;
 import com.aldebaran.qi.sdk.object.conversation.Say;
+import com.aldebaran.qi.sdk.object.conversation.Topic;
 
-public class MainActivity  extends RobotActivity implements RobotLifecycleCallbacks {
+import java.util.Arrays;
+import java.util.List;
+
+public class MainActivity extends RobotActivity implements RobotLifecycleCallbacks {
+
+    int diagnosis = -2;
+    Future<Void> execFuture;
+    private Button button;
+    private QiContext qiContext = null;
+    private CheckBox fever;
+    private CheckBox cough;
+    private CheckBox shortness;
+    private CheckBox trouble;
+    private CheckBox fatigue;
+    private CheckBox chills;
+    private CheckBox headache;
+    private CheckBox throat;
+    private CheckBox nausea;
+    private CheckBox diarrhea;
+    private Button submit;
+    private Boolean[] dumbArray;
+    private Say sayAction, startingQuestion, alive, sick, youaredead, diagnosing;
+    private Topic topic;
+    private QiChatbot qiChatbot;
+    private Chat chatAction;
+    private QiChatVariable chatVariable;
+    private String[] yesStringArray = {"yes", "yup", "affirmative", "yeah", "sure"};
+    private List<String> yesStrings = Arrays.asList(yesStringArray);
+    private Boolean diagnosisDone = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.randomstuff);
         // Register the RobotLifecycleCallbacks to this Activity.
         QiSDK.register(this, this);
     }
@@ -30,13 +71,65 @@ public class MainActivity  extends RobotActivity implements RobotLifecycleCallba
 
     @Override
     public void onRobotFocusGained(QiContext qiContext) {
-        // Create a new say action.
-        Say say = SayBuilder.with(qiContext) // Create the builder with the context.
-                .withText("Hello human!") // Set the text to say.
-                .build(); // Build the say action.
+        this.qiContext = qiContext;
+        initActions();
+        execFuture = chatAction.async().run();
+    }
 
-        // Execute the action.
-        say.run();
+    private void initActions() {
+//        chatVariable = qiChatbot.variable("Chat");
+//        chatVariable.addOnValueChangedListener(currentValue -> {
+//            if(yesStrings.contains(chatVariable.getValue().toLowerCase())) {
+//                displayCheckboxes();
+//            }
+//        });
+
+        startingQuestion = SayBuilder.with(qiContext)
+                .withText("Hello. What are you here for today?")
+                .build();
+
+        alive = SayBuilder.with(qiContext)
+                .withText("healthy")
+                .build();
+
+        sick = SayBuilder.with(qiContext)
+                .withText("sick")
+                .build();
+
+        youaredead = SayBuilder.with(qiContext)
+                .withText("dead")
+                .build();
+
+        diagnosing = SayBuilder.with(qiContext)
+                .withText("Diagnosing...")
+                .build();
+
+        sayAction = SayBuilder.with(qiContext)
+                .withText("test")
+                .build();
+
+        topic = TopicBuilder.with(qiContext)
+                .withResource(R.raw.test)
+                .build();
+
+        qiChatbot = QiChatbotBuilder.with(qiContext)
+                .withTopic(topic)
+                .build();
+
+        qiChatbot.addOnBookmarkReachedListener((bookmark) -> {
+            if (bookmark.getName().equals("begun")) {
+                displayCheckboxes();
+            } else if (bookmark.getName().equals("delay")) {
+                displayCheckboxes();
+            } else if (bookmark.getName().equals("done") && !diagnosisDone) {
+//                defineCheckboxes();
+                performDiagnosis();
+            }
+        });
+
+        chatAction = ChatBuilder.with(qiContext)
+                .withChatbot(qiChatbot)
+                .build();
     }
 
     @Override
@@ -47,5 +140,71 @@ public class MainActivity  extends RobotActivity implements RobotLifecycleCallba
     @Override
     public void onRobotFocusRefused(String reason) {
         // The robot focus is refused.
+    }
+
+    public void displayCheckboxes() {
+        execFuture.requestCancellation();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                setContentView(R.layout.symptomcheckbox);
+                submit = findViewById((R.id.submitButton));
+                submit.setOnClickListener(v -> {
+                    //setContentView(R.layout.inprogress);
+                    defineCheckboxes();
+                    performDiagnosis();
+                });
+            }
+
+            public void defineCheckboxes() {
+                fever = findViewById(R.id.feverBox);
+                cough = findViewById(R.id.coughBox);
+                shortness = findViewById(R.id.shortnessBox);
+                trouble = findViewById(R.id.troubleBox);
+                fatigue = findViewById(R.id.fatigueBox);
+                chills = findViewById(R.id.chillBox);
+                headache = findViewById(R.id.headacheBox);
+                throat = findViewById(R.id.throatBox);
+                nausea = findViewById(R.id.nauseaBox);
+                diarrhea = findViewById(R.id.diarrheaBox);
+
+                dumbArray = new Boolean[]{fever.isChecked(), cough.isChecked(), shortness.isChecked(), trouble.isChecked(), fatigue.isChecked(), chills.isChecked(), headache.isChecked(), throat.isChecked(), nausea.isChecked(), diarrhea.isChecked()};
+            }
+        });
+    }
+
+    public void performDiagnosis() {
+        diagnosis = diagnose(dumbArray);
+        diagnosisDone = true;
+        execFuture.requestCancellation();
+        displayResults(diagnosis);
+    }
+
+    public void displayResults(int diagnosis) {
+//        try {
+//            Thread.sleep(2000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+        if (diagnosis == 0) {
+            runOnUiThread(() -> setContentView(R.layout.healthy));
+        } else if (diagnosis == 1) {
+            runOnUiThread(() -> setContentView(R.layout.sick));
+        }
+    }
+
+    public int diagnose(Boolean[] dumbArray) {
+        int counter = 0;
+        for (Boolean var : dumbArray) {
+            if (var) {
+                counter++;
+            }
+        }
+        float tally = (float) counter / dumbArray.length;
+        if (tally >= 0.5) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 }
