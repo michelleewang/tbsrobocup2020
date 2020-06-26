@@ -1,0 +1,26 @@
+topic: ~test()
+
+concept:(greeting) [hello hi hey "good morning" greetings]
+
+concept: (yes) [Yes Yeah Sure Uh-huh Affirmative "Roger Roger" Yep Yup "You got it!" ys]
+concept: (no) [No Nope Nuh-uh Negative "You suck" "Get away from me" "give me a moment"]
+
+concept: (startingQuestion) ["Hello. What are you here for today?"]
+concept: (diagnosis) [diagnosis Diagnosis]
+
+concept: (ready) ["I'm ready" ready]
+concept: (done) [done]
+
+u: (~greeting) ~startingQuestion
+    u1: (~diagnosis) ^nextProposal
+
+proposal: Would you like to begin your diagnosis now?
+    u1:(~no) Please tell me when you are ready. ^stayInScope
+    u1:(~yes) Please indicate your symptoms on the screen below and submit when finished. %begun
+        u2: (~done) %done ^nextProposal
+    u1:(~ready) Please indicate your symptoms on the screen below and submit when finished. %begun
+        u2: (~done) %done ^nextProposal
+
+#proposal: %diagnose Thank you. Your diagnosis can be seen on-screen.
+
+proposal: Thank you. You have been diagnosed as: $diagnosis %finaldiagnosis
