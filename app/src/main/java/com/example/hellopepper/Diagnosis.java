@@ -12,9 +12,10 @@ public class Diagnosis {
 
     public static Boolean hasSeriousSypmtoms = false; //has potentially life-threatening or serious symptoms, should call doctor/hospital
     public static double sickProb;
+    public static int symptomCounter = 0;
 
-    private double[] priorityProbabilities = {0.98, 0.44, 0.76, 0.4, 0.35, 0.55, 0.28};
-    private double[] secondaryProbabilities = {0.08, 0.05, 0.05, 0.05, 0.05, 0.05, 0.025, 0.03};
+    private double[] priorityProbabilities = {0.98, 0.44, 0.76, 0.4, 0.35, 0.55, 0.28}; //fever.isChecked(), fatigue.isChecked(), cough.isChecked(), appetite.isChecked(), ache.isChecked(), shortness.isChecked(), mucus.isChecked()
+    private double[] secondaryProbabilities = {0.08, 0.05, 0.05, 0.05, 0.05, 0.05, 0.03, 0.03};
 //    private double[] seriousProbabilities = {}
 
     public double diagnose() {
@@ -29,7 +30,10 @@ public class Diagnosis {
                 sickProb = sickProb * (1.0 - secondaryProbabilities[i]);
             }
         }
-        Log.i("sickprob", Double.toString(sickProb));
+        if(hasOtherSymptoms) {
+            sickProb = sickProb * 0.7;
+        }
+//        Log.i("sickprob", Double.toString(sickProb));
         return sickProb;
 //        if(sickProb < 0.5) {
 //            if(sumSymptoms() > 2) {
@@ -44,9 +48,19 @@ public class Diagnosis {
     }
 
     public int sumSymptoms() {
-        int symptomCounter = 0;
+        symptomCounter = 0;
         for (int i = 0; i < prioritySymptoms.length; i++) {
             if(prioritySymptoms[i]) {
+                symptomCounter++;
+            }
+        }
+        for (int l = 0; l < secondarySymptoms.length; l++) {
+            if(secondarySymptoms[l]) {
+                symptomCounter++;
+            }
+        }
+        for (int j = 0; j < seriousSymptoms.length; j++) {
+            if(prioritySymptoms[j]) {
                 symptomCounter++;
             }
         }
@@ -61,9 +75,9 @@ public class Diagnosis {
         secondarySymptoms = otherSymptoms;
     }
 
-    public void setSeriousSymptoms(Boolean[] deadlySymptoms, CheckBox otherSymptoms) {
+    public void setSeriousSymptoms(Boolean[] deadlySymptoms, CheckBox otherSymptomsBox) {
         seriousSymptoms = deadlySymptoms;
-        hasOtherSymptoms = otherSymptoms.isChecked();
+        hasOtherSymptoms = otherSymptomsBox.isChecked();
         for(int i = 0; i < seriousSymptoms.length; i++) {
             if(seriousSymptoms[i] == true) {
                 hasSeriousSypmtoms = true;
@@ -82,5 +96,6 @@ public class Diagnosis {
     public void resetBot() {
         sickProb = 1.0;
         hasSeriousSypmtoms = false;
+        symptomCounter = 0;
     }
 }

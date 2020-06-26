@@ -10,11 +10,15 @@ import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.QiSDK;
 import com.aldebaran.qi.sdk.RobotLifecycleCallbacks;
+import com.aldebaran.qi.sdk.builder.AnimateBuilder;
+import com.aldebaran.qi.sdk.builder.AnimationBuilder;
 import com.aldebaran.qi.sdk.builder.ChatBuilder;
 import com.aldebaran.qi.sdk.builder.QiChatbotBuilder;
 import com.aldebaran.qi.sdk.builder.SayBuilder;
 import com.aldebaran.qi.sdk.builder.TopicBuilder;
 import com.aldebaran.qi.sdk.design.activity.RobotActivity;
+import com.aldebaran.qi.sdk.object.actuation.Animate;
+import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.aldebaran.qi.sdk.object.conversation.Bookmark;
 import com.aldebaran.qi.sdk.object.conversation.Chat;
 import com.aldebaran.qi.sdk.object.conversation.QiChatVariable;
@@ -65,7 +69,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private String[] yesStringArray = {"yes", "yup", "affirmative", "yeah", "sure"};
     private List<String> yesStrings = Arrays.asList(yesStringArray);
     private Boolean diagnosisDone = false;
-//    private static DecimalFormat df2 = new DecimalFormat("#.##");
+    //    private static DecimalFormat df2 = new DecimalFormat("#.##");
+    private Animate happyDance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,6 +138,14 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         topic = TopicBuilder.with(qiContext)
                 .withResource(R.raw.test)
                 .build();
+
+        Animation happyDanceAnimation = AnimationBuilder.with(qiContext) // Create the builder with the context.
+                .withResources(R.raw.happydance) // Set the animation resource.
+                .build(); // Build the animation.
+
+        happyDance = AnimateBuilder.with(qiContext) // Create the builder with the context.
+                .withAnimation(happyDanceAnimation) // Set the animation.
+                .build(); // Build the animate action.
 
         qiChatbot = QiChatbotBuilder.with(qiContext)
                 .withTopic(topic)
@@ -264,33 +277,39 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
             secondarySymptoms[0] = new Boolean[]{headache.isChecked(), throat.isChecked(), nose.isChecked(), chills.isChecked(), loss.isChecked(), nausea.isChecked(), vomiting.isChecked(), diarrhea.isChecked()};
         });
+        StringBuilder sbf = new StringBuilder("");
+        sbf.append(secondarySymptoms[0]);
+//        Log.i("secondary", sbf.toString());
         diagnosisBot.setSecondarySymptoms(secondarySymptoms[0]);
         displayFinalCheckboxes();
     }
 
     public void checkOtherSymptoms() {
-        final Boolean[][] secondarySymptoms = {new Boolean[0]};
+        final Boolean[][] otherSymptoms = {new Boolean[0]};
         final CheckBox[] otherBox = new CheckBox[1];
+        final Boolean[] hasOtherSymptoms = new Boolean[1];
         runOnUiThread(() -> {
             trouble = findViewById(R.id.troubleBox);
             lips = findViewById(R.id.lipsBox);
             confusion = findViewById(R.id.confusionBox);
             pain = findViewById(R.id.painBox);
             otherBox[0] = findViewById(R.id.unlistedBox);
-            secondarySymptoms[0] = new Boolean[]{trouble.isChecked(), lips.isChecked(), confusion.isChecked(), pain.isChecked()};
+            otherSymptoms[0] = new Boolean[]{trouble.isChecked(), lips.isChecked(), confusion.isChecked(), pain.isChecked()};
+            hasOtherSymptoms[0] = otherBox[0].isChecked();
         });
-        diagnosisBot.setSeriousSymptoms(secondarySymptoms[0], otherBox[0]);
+        diagnosisBot.setSeriousSymptoms(otherSymptoms[0], otherBox[0]);
 //        diagnosis = diagnosisBot.diagnose();
         double sickChance = diagnosisBot.diagnose();
         int numSymptoms = diagnosisBot.sumSymptoms();
+        Boolean hasSeriousSymptoms = diagnosisBot.hasSeriousSypmtoms();
         diagnosis = getDiagnosis(sickChance, numSymptoms);
         diagnosisDone = true;
-        displayResults(diagnosis, sickChance);
+        displayResults(diagnosis, sickChance, hasSeriousSymptoms, hasOtherSymptoms[0]);
     }
 
     public int getDiagnosis(double sickChance, int numSymptoms) {
-        if(sickChance < 0.5) {
-            if(numSymptoms > 2) {
+        if (sickChance < 0.5) {
+            if (numSymptoms > 2) {
                 return 2; //sick, not COVID
             } else {
                 return 0; //healthy
@@ -300,7 +319,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         }
     }
 
-    public void displayResults(int diagnosis, double sickChance) {
+    public void displayResults(int diagnosis, double sickChance, Boolean hasSeriousSymptoms, Boolean hasOtherSymptoms) {
 //        try {
 //            Thread.sleep(2000);
 //        } catch (InterruptedException e) {
@@ -311,7 +330,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 //        double sickChance = diagnosisBot.sickProb * 100.0;
 //        String sickChanceStr = df2.format(sickChance);
 //        final Boolean[] diagnoseAgain = {null};
-        if (diagnosis == 0 || diagnosis == 2) {
+        if (diagnosis == 0) {
             result = " healthy.";
             runOnUiThread(() -> {
                 setContentView(R.layout.healthy);
@@ -324,8 +343,22 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                     exitProgram();
                 });
             });
+            happyDance.async().run();
+        } else if (diagnosis == 2) {
+            result = " sick, but not with COVID-19.";
+            runOnUiThread(() -> {
+                setContentView(R.layout.otherdisease);
+                Button diagnoseButton = (Button) findViewById(R.id.diagnose);
+                Button exitButton = (Button) findViewById(R.id.exit);
+                diagnoseButton.setOnClickListener(v -> {
+                    restartProgram();
+                });
+                exitButton.setOnClickListener(v -> {
+                    exitProgram();
+                });
+            });
         } else if (diagnosis == 1) {
-            result = " sick.";
+            result = " sick with COVID-19.";
             runOnUiThread(() -> {
                 setContentView(R.layout.sick);
                 Button diagnoseButton = (Button) findViewById(R.id.diagnose);
@@ -339,6 +372,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             });
         }
         updateChance(sickChance);
+        if (hasSeriousSymptoms) {
+            updateDisclaimer();
+        }
 //        runOnUiThread(() -> {qiChatbot.variable("diagnosis").setValue(finalResult);});
         finalResult = result;
         String finalResult1 = finalResult;
@@ -363,18 +399,26 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     public void updateChance(double sickChance) {
-        TextView chanceText = (TextView)findViewById(R.id.sickChance);
+        TextView chanceText = (TextView) findViewById(R.id.sickChance);
         int intChance = (int) sickChance;
-        if(Math.abs(sickChance - intChance) < 0.01) {
-            chanceText.setText("Judging from your symptoms, there is an estimated " + Integer.toString(intChance) + "% chance you are sick.*");
+        if (Math.abs(sickChance - intChance) < 0.01) {
+            chanceText.setText("Judging from your symptoms, there is an estimated " + Integer.toString(intChance) + "% chance you have COVID-19 or a similar disease.*");
         } else {
-            chanceText.setText("Judging from your symptoms, there is an estimated " + String.format("%.2f", sickChance * 100) + "% chance you are sick.*");
+            chanceText.setText("Judging from your symptoms, there is an estimated " + String.format("%.2f", sickChance * 100) + "% chance you have COVID-19 or a similar disease.*");
 
         }
     }
 
+    public void updateDisclaimer() {
+        TextView disclaimer = (TextView) findViewById(R.id.disclaimer);
+        disclaimer.setWidth(900);
+        disclaimer.setText("Note: you appear to be suffering from symptoms that could potentially be signs of a serious condition. Please contact a doctor or hospital immediately.");
+    }
+
     public void restartProgram() {
         diagnosisBot.resetBot();
+        TextView disclaimer = (TextView) findViewById(R.id.disclaimer);
+        disclaimer.setWidth(790);
         initShortenedDiagnosis();
         runOnUiThread(() -> {
             instructions.async().run();
