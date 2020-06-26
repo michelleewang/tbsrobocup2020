@@ -5,6 +5,7 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
+import android.widget.ImageView;
 
 import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
@@ -71,11 +72,13 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private Boolean diagnosisDone = false;
     //    private static DecimalFormat df2 = new DecimalFormat("#.##");
     private Animate happyDance;
+    private ImageView imageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+//        imageView = (ImageView)findViewById(R.id.rainbow);
         // Register the RobotLifecycleCallbacks to this Activity.
         QiSDK.register(this, this);
     }
@@ -287,24 +290,31 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     public void checkOtherSymptoms() {
         final Boolean[][] otherSymptoms = {new Boolean[0]};
         final CheckBox[] otherBox = new CheckBox[1];
+        final CheckBox[] kidBox = new CheckBox[1];
         final Boolean[] hasOtherSymptoms = new Boolean[1];
+        final Boolean[] kidOutOfSchool = new Boolean[1];
         runOnUiThread(() -> {
             trouble = findViewById(R.id.troubleBox);
             lips = findViewById(R.id.lipsBox);
             confusion = findViewById(R.id.confusionBox);
             pain = findViewById(R.id.painBox);
             otherBox[0] = findViewById(R.id.unlistedBox);
+            kidBox[0] = findViewById(R.id.catchBox);
             otherSymptoms[0] = new Boolean[]{trouble.isChecked(), lips.isChecked(), confusion.isChecked(), pain.isChecked()};
             hasOtherSymptoms[0] = otherBox[0].isChecked();
+            kidOutOfSchool[0] = kidBox[0].isChecked();
         });
-        diagnosisBot.setSeriousSymptoms(otherSymptoms[0], otherBox[0]);
+        if (!kidOutOfSchool[0]) {
+            diagnosisBot.setSeriousSymptoms(otherSymptoms[0], otherBox[0]);
 //        diagnosis = diagnosisBot.diagnose();
-        double sickChance = diagnosisBot.diagnose();
-        int numSymptoms = diagnosisBot.sumSymptoms();
-        Boolean hasSeriousSymptoms = diagnosisBot.hasSeriousSypmtoms();
-        diagnosis = getDiagnosis(sickChance, numSymptoms);
-        diagnosisDone = true;
-        displayResults(diagnosis, sickChance, hasSeriousSymptoms, hasOtherSymptoms[0]);
+            double sickChance = diagnosisBot.diagnose();
+            int numSymptoms = diagnosisBot.sumSymptoms();
+            Boolean hasSeriousSymptoms = diagnosisBot.hasSeriousSypmtoms();
+            diagnosis = getDiagnosis(sickChance, numSymptoms);
+            diagnosisDone = true;
+            displayResults(diagnosis, sickChance, hasSeriousSymptoms, hasOtherSymptoms[0]);
+        }
+        catchKid();
     }
 
     public int getDiagnosis(double sickChance, int numSymptoms) {
@@ -318,6 +328,19 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             return 1; //sick with COVID
         }
     }
+
+    public void catchKid() {
+        runOnUiThread(() -> {
+            setContentView(R.layout.notsick);
+            });
+//        imageViewSetValue("rb");
+    }
+
+//    private void imageViewSetValue(String val) {
+//        if (val.equals("rb"))
+//            runOnUiThread(() -> { imageView.setImageResource(R.drawable.rb); });
+//
+//    }
 
     public void displayResults(int diagnosis, double sickChance, Boolean hasSeriousSymptoms, Boolean hasOtherSymptoms) {
 //        try {
