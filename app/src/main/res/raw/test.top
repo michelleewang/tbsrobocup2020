@@ -16,9 +16,9 @@ u: (~greeting) ~startingQuestion
 
 proposal: Would you like to begin your diagnosis now?
     u1:(~no) Please tell me when you are ready. ^stayInScope
-    u1:(~yes) Please indicate your symptoms on the screen below. Press Submit or inform me when finished. %begun
+    u1:(~yes) Please indicate your symptoms on the screen below and submit when finished. %begun
         u2: (~done) %done ^nextProposal
-    u1:(~ready) Please indicate your symptoms on the screen below. Press Submit or inform me when finished. %begun
+    u1:(~ready) Please indicate your symptoms on the screen below and submit when finished. %begun
         u2: (~done) %done ^nextProposal
 
 #proposal: %diagnose Thank you. Your diagnosis can be seen on-screen.

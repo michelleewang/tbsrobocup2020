@@ -1,0 +1,86 @@
+package com.example.hellopepper;
+
+import android.util.Log;
+import android.widget.CheckBox;
+
+public class Diagnosis {
+
+    private Boolean[] prioritySymptoms; //most common ones
+    private Boolean[] secondarySymptoms; //less often seen ones
+    private Boolean[] seriousSymptoms; //
+    private Boolean hasOtherSymptoms = false;
+
+    public static Boolean hasSeriousSypmtoms = false; //has potentially life-threatening or serious symptoms, should call doctor/hospital
+    public static double sickProb;
+
+    private double[] priorityProbabilities = {0.98, 0.44, 0.76, 0.4, 0.35, 0.55, 0.28};
+    private double[] secondaryProbabilities = {0.08, 0.05, 0.05, 0.05, 0.05, 0.05, 0.025, 0.03};
+//    private double[] seriousProbabilities = {}
+
+    public double diagnose() {
+        double sickProb = 1.0;
+        for (int i = 0; i < prioritySymptoms.length; i++) {
+            if (!prioritySymptoms[i]) {
+                sickProb = sickProb * (1.0 - priorityProbabilities[i]);
+            }
+        }
+        for (int i = 0; i < secondarySymptoms.length; i++) {
+            if (!secondarySymptoms[i]) {
+                sickProb = sickProb * (1.0 - secondaryProbabilities[i]);
+            }
+        }
+        Log.i("sickprob", Double.toString(sickProb));
+        return sickProb;
+//        if(sickProb < 0.5) {
+//            if(sumSymptoms() > 2) {
+//                return 2; //sick, not COVID
+//            } else {
+//                return 0; //healthy
+//            }
+//        } else {
+//            return 1; //sick with COVID
+//        }
+
+    }
+
+    public int sumSymptoms() {
+        int symptomCounter = 0;
+        for (int i = 0; i < prioritySymptoms.length; i++) {
+            if(prioritySymptoms[i]) {
+                symptomCounter++;
+            }
+        }
+        return symptomCounter;
+    }
+
+    public void setPrioritySymptoms(Boolean[] mainSymptoms) {
+        prioritySymptoms = mainSymptoms;
+    }
+
+    public void setSecondarySymptoms(Boolean[] otherSymptoms) {
+        secondarySymptoms = otherSymptoms;
+    }
+
+    public void setSeriousSymptoms(Boolean[] deadlySymptoms, CheckBox otherSymptoms) {
+        seriousSymptoms = deadlySymptoms;
+        hasOtherSymptoms = otherSymptoms.isChecked();
+        for(int i = 0; i < seriousSymptoms.length; i++) {
+            if(seriousSymptoms[i] == true) {
+                hasSeriousSypmtoms = true;
+            }
+        }
+    }
+
+    public Boolean hasSeriousSypmtoms() {
+        return hasSeriousSypmtoms;
+    }
+
+    public double getSickProb() {
+        return sickProb;
+    }
+
+    public void resetBot() {
+        sickProb = 1.0;
+        hasSeriousSypmtoms = false;
+    }
+}
