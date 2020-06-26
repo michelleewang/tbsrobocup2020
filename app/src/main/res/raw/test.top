@@ -6,13 +6,15 @@ concept: (yes) [Yes Yeah Sure Uh-huh Affirmative "Roger Roger" Yep Yup "You got 
 concept: (no) [No Nope Nuh-uh Negative "You suck" "Get away from me" "give me a moment"]
 
 concept: (startingQuestion) ["Hello. What are you here for today?"]
-concept: (diagnosis) [diagnosis Diagnosis]
+concept: (diagnosis) [diagnosis Diagnosis one diagnose]
+concept: (info) [info information "more info" two]
 
 concept: (ready) ["I'm ready" ready]
 concept: (done) [done]
 
-u: (~greeting) ~startingQuestion
+u: (~greeting) ~startingQuestion %startQuestion
     u1: (~diagnosis) ^nextProposal
+#    u2: (~info)
 
 proposal: Would you like to begin your diagnosis now?
     u1:(~no) Please tell me when you are ready. ^stayInScope
