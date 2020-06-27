@@ -6,6 +6,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <Button
+        android:id="@+id/moreInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="452dp"
+        android:layout_marginTop="380dp"
+        android:text="More Info"
+        android:textSize="30sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <TextView
         android:id="@+id/disclaimer"
         android:layout_width="887dp"
@@ -22,7 +33,7 @@
         android:id="@+id/diagnose"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="308dp"
+        android:layout_marginStart="216dp"
         android:layout_marginTop="380dp"
         android:text="Re-diagnose"
         android:textSize="30sp"
@@ -33,7 +44,7 @@
         android:id="@+id/exit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="556dp"
+        android:layout_marginStart="656dp"
         android:layout_marginTop="380dp"
         android:text="Exit"
         android:textSize="30sp"

@@ -65,14 +65,14 @@
         app:srcCompat="@drawable/symptomsqr" />
 
     <ImageView
-        android:id="@+id/preventionQR"
+        android:id="@+id/hospitalQR"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="732dp"
         android:layout_marginTop="132dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/symptomsqr" />
+        app:srcCompat="@drawable/hospitalqr" />
 
     <ImageView
         android:id="@+id/testingQR"
@@ -98,12 +98,12 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/preventionText"
+        android:id="@+id/hospitalText"
         android:layout_width="198dp"
         android:layout_height="126dp"
         android:layout_marginStart="732dp"
         android:layout_marginTop="332dp"
-        android:text="Preventing the Spread"
+        android:text="Local Health Departments (US)"
         android:textAlignment="center"
         android:textColor="#000000"
         android:textSize="30sp"

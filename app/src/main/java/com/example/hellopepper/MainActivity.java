@@ -1,11 +1,9 @@
 package com.example.hellopepper;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
-import android.widget.ImageView;
 
 import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
@@ -20,6 +18,8 @@ import com.aldebaran.qi.sdk.builder.TopicBuilder;
 import com.aldebaran.qi.sdk.design.activity.RobotActivity;
 import com.aldebaran.qi.sdk.object.actuation.Animate;
 import com.aldebaran.qi.sdk.object.actuation.Animation;
+import com.aldebaran.qi.sdk.object.conversation.AutonomousReactionImportance;
+import com.aldebaran.qi.sdk.object.conversation.AutonomousReactionValidity;
 import com.aldebaran.qi.sdk.object.conversation.Bookmark;
 import com.aldebaran.qi.sdk.object.conversation.Chat;
 import com.aldebaran.qi.sdk.object.conversation.QiChatVariable;
@@ -27,52 +27,31 @@ import com.aldebaran.qi.sdk.object.conversation.QiChatbot;
 import com.aldebaran.qi.sdk.object.conversation.Say;
 import com.aldebaran.qi.sdk.object.conversation.Topic;
 
-import org.w3c.dom.Text;
-
-import java.text.DecimalFormat;
-import java.util.Arrays;
-import java.util.List;
-
 public class MainActivity extends RobotActivity implements RobotLifecycleCallbacks {
 
     int diagnosis = -2;
-    private double sickChance = 0.00;
+    int numSymptoms = 0;
     Diagnosis diagnosisBot = new Diagnosis();
     Future<Void> execFuture;
+    private double sickChance = 0.00;
     private QiContext qiContext = null;
-    private CheckBox fever;
-    private CheckBox cough;
-    private CheckBox appetite;
-    private CheckBox shortness;
-    private CheckBox fatigue;
-    private CheckBox ache;
-    private CheckBox mucus;
-    private CheckBox headache;
-    private CheckBox loss;
-    private CheckBox throat;
-    private CheckBox nose;
-    private CheckBox nausea;
-    private CheckBox chills;
-    private CheckBox vomiting;
-    private CheckBox diarrhea;
-    private CheckBox trouble;
-    private CheckBox lips;
-    private CheckBox confusion;
-    private CheckBox pain;
-    private Button submit;
-    private Say sayAction, startQuestion, alive, sick, youaredead, diagnosing, thankyou, instructions;
-    private Bookmark bookmark = null;
-    private Bookmark doneBookmark = null;
+    private CheckBox fever, cough, appetite, shortness, fatigue, ache, mucus; //primary symptoms
+    private CheckBox headache, loss, throat, nose, nausea, chills, vomiting, diarrhea; //secondary symptoms
+    private CheckBox trouble, lips, confusion, pain; //serious symptoms
+    private Button submit, moreInfoBack, returnButton, optionsExit;
+    private Say sayDiagnosis, instructions, thankyou, anythingelse;
     private Topic topic, topic2;
     private QiChatbot qiChatbot, qiChatbot2;
-    private Chat chatAction, chatAction2;
+    private Chat chatAction, diagnosisChat;
     private QiChatVariable chatVariable;
-    private String[] yesStringArray = {"yes", "yup", "affirmative", "yeah", "sure"};
-    private List<String> yesStrings = Arrays.asList(yesStringArray);
     private Boolean diagnosisDone = false;
+    private Boolean inMoreInfo = false;
+    private Boolean hasSeriousSymptoms = false;
+    private Boolean hasOtherSymptoms = false;
     //    private static DecimalFormat df2 = new DecimalFormat("#.##");
     private Animate happyDance;
-    private ImageView imageView;
+
+    private Bookmark optionsBookmark, diagnosisProposalBookmark;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,44 +77,20 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     private void initActions() {
-//        chatVariable = qiChatbot.variable("Chat");
-//        chatVariable.addOnValueChangedListener(currentValue -> {
-//            if(yesStrings.contains(chatVariable.getValue().toLowerCase())) {
-//                displayCheckboxes();
-//            }
-//        });
-
-        startQuestion = SayBuilder.with(qiContext)
-                .withText("Hello. What are you here for today?")
+        thankyou = SayBuilder.with(qiContext)
+                .withText("Thank you for being cautious.")
                 .build();
 
-        alive = SayBuilder.with(qiContext)
-                .withText("healthy")
-                .build();
-
-        sick = SayBuilder.with(qiContext)
-                .withText("sick")
-                .build();
-
-        youaredead = SayBuilder.with(qiContext)
-                .withText("dead")
-                .build();
-
-        diagnosing = SayBuilder.with(qiContext)
-                .withText("Diagnosing...")
+        sayDiagnosis = SayBuilder.with(qiContext)
+                .withText("The diagnosis is complete. Your results should be appearing on-screen.")
                 .build();
 
         instructions = SayBuilder.with(qiContext)
-                .withText(" Please indicate your symptoms on the screen below. Press Submit or inform me when finished.")
+                .withText("Please indicate your symptoms on the screen below and submit when finished.")
                 .build();
 
-        thankyou = SayBuilder.with(qiContext)
-                .withText("Thank you.")
-                .build();
-
-
-        sayAction = SayBuilder.with(qiContext)
-                .withText("test")
+        anythingelse = SayBuilder.with(qiContext)
+                .withText("Anything else?")
                 .build();
 
         topic = TopicBuilder.with(qiContext)
@@ -164,6 +119,15 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 displayCheckboxes();
             } else if (bookmark.getName().equals("done") && !diagnosisDone) {
                 runOnUiThread(() -> checkPrimarySymptoms());
+            } else if (bookmark.getName().equals("startQuestion")) {
+                displayOptions(bookmark);
+            } else if (bookmark.getName().equals("moreInfo")) {
+                moreInfo();
+            } else if (bookmark.getName().equals("diagnosisproposal")) {
+                diagnosisProposalBookmark = bookmark;
+            } else if (bookmark.getName().equals("exitMoreInfo")) {
+                exitMoreInfo();
+                displayOptions(null);
             }
         });
 
@@ -188,20 +152,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             }
         });
 
-        chatAction2 = ChatBuilder.with(qiContext)
+        diagnosisChat = ChatBuilder.with(qiContext)
                 .withChatbot(qiChatbot2)
                 .build();
-
-//        for (Map.Entry<String, Bookmark> entry : topic.getBookmarks().entrySet()) {
-//            Bookmark temp = entry.getValue();
-//            if (temp.getName() == "finaldiagnosis") {
-//                doneBookmark = temp;
-//                break;
-//            }
-//        }
-    }
-
-    public void initShortenedDiagnosis() {
     }
 
     @Override
@@ -212,6 +165,47 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     @Override
     public void onRobotFocusRefused(String reason) {
         // The robot focus is refused.
+    }
+
+    public void goToBookmark(Bookmark bookmark) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                qiChatbot.goToBookmark(bookmark, AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
+            }
+        });
+        thread.start();
+    }
+
+    public void moreInfo() {
+        runOnUiThread(() -> {
+            setContentView(R.layout.testinginfo);
+            moreInfoBack = findViewById((R.id.moreInfoBack));
+            moreInfoBack.setOnClickListener(v -> {
+                exitMoreInfo();
+            });
+        });
+    }
+
+    public void exitMoreInfo() {
+        runOnUiThread(() -> {
+            setContentView(R.layout.possibleoptions);
+            goToBookmark(optionsBookmark);
+        });
+    }
+
+    public void displayOptions(Bookmark bookmark) {
+        if (bookmark != null) {
+            optionsBookmark = bookmark;
+        }
+        runOnUiThread(() -> {
+            setContentView(R.layout.possibleoptions);
+            optionsExit = findViewById((R.id.optionsExit));
+            optionsExit.setOnClickListener(v -> {
+                //setContentView(R.layout.inprogress);
+                resetProgram();
+            });
+        });
     }
 
     public void displayCheckboxes() {
@@ -291,7 +285,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         final Boolean[][] otherSymptoms = {new Boolean[0]};
         final CheckBox[] otherBox = new CheckBox[1];
         final CheckBox[] kidBox = new CheckBox[1];
-        final Boolean[] hasOtherSymptoms = new Boolean[1];
+        final Boolean[] hasOtherSymptomsBool = new Boolean[1];
         final Boolean[] kidOutOfSchool = new Boolean[1];
         runOnUiThread(() -> {
             trouble = findViewById(R.id.troubleBox);
@@ -301,25 +295,27 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             otherBox[0] = findViewById(R.id.unlistedBox);
             kidBox[0] = findViewById(R.id.catchBox);
             otherSymptoms[0] = new Boolean[]{trouble.isChecked(), lips.isChecked(), confusion.isChecked(), pain.isChecked()};
-            hasOtherSymptoms[0] = otherBox[0].isChecked();
+            hasOtherSymptomsBool[0] = otherBox[0].isChecked();
             kidOutOfSchool[0] = kidBox[0].isChecked();
         });
         if (!kidOutOfSchool[0]) {
             diagnosisBot.setSeriousSymptoms(otherSymptoms[0], otherBox[0]);
 //        diagnosis = diagnosisBot.diagnose();
-            double sickChance = diagnosisBot.diagnose();
-            int numSymptoms = diagnosisBot.sumSymptoms();
-            Boolean hasSeriousSymptoms = diagnosisBot.hasSeriousSypmtoms();
+            sickChance = diagnosisBot.diagnose();
+            numSymptoms = diagnosisBot.sumSymptoms();
+            hasSeriousSymptoms = diagnosisBot.hasSeriousSypmtoms();
+            hasOtherSymptoms = hasOtherSymptomsBool[0];
             diagnosis = getDiagnosis(sickChance, numSymptoms);
             diagnosisDone = true;
-            displayResults(diagnosis, sickChance, hasSeriousSymptoms, hasOtherSymptoms[0]);
+            displayResults(diagnosis);
+        } else {
+            catchKid();
         }
-        catchKid();
     }
 
     public int getDiagnosis(double sickChance, int numSymptoms) {
         if (sickChance < 0.5) {
-            if (numSymptoms > 2) {
+            if (numSymptoms > 4) {
                 return 2; //sick, not COVID
             } else {
                 return 0; //healthy
@@ -332,7 +328,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     public void catchKid() {
         runOnUiThread(() -> {
             setContentView(R.layout.notsick);
+            returnButton = findViewById((R.id.returnButton));
+            returnButton.setOnClickListener(v -> {
+                //setContentView(R.layout.inprogress);
+                resetProgram();
             });
+        });
 //        imageViewSetValue("rb");
     }
 
@@ -342,12 +343,13 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 //
 //    }
 
-    public void displayResults(int diagnosis, double sickChance, Boolean hasSeriousSymptoms, Boolean hasOtherSymptoms) {
+    public void displayResults(int diagnosis) {
 //        try {
 //            Thread.sleep(2000);
 //        } catch (InterruptedException e) {
 //            e.printStackTrace();
 //        }
+        execFuture.requestCancellation();
         String result = null;
         String finalResult = null;
 //        double sickChance = diagnosisBot.sickProb * 100.0;
@@ -355,44 +357,14 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 //        final Boolean[] diagnoseAgain = {null};
         if (diagnosis == 0) {
             result = " healthy.";
-            runOnUiThread(() -> {
-                setContentView(R.layout.healthy);
-                Button diagnoseButton = (Button) findViewById(R.id.diagnose);
-                Button exitButton = (Button) findViewById(R.id.exit);
-                diagnoseButton.setOnClickListener(v -> {
-                    restartProgram();
-                });
-                exitButton.setOnClickListener(v -> {
-                    exitProgram();
-                });
-            });
+            displayResultPopup(R.layout.healthy);
             happyDance.async().run();
         } else if (diagnosis == 2) {
             result = " sick, but not with COVID-19.";
-            runOnUiThread(() -> {
-                setContentView(R.layout.otherdisease);
-                Button diagnoseButton = (Button) findViewById(R.id.diagnose);
-                Button exitButton = (Button) findViewById(R.id.exit);
-                diagnoseButton.setOnClickListener(v -> {
-                    restartProgram();
-                });
-                exitButton.setOnClickListener(v -> {
-                    exitProgram();
-                });
-            });
+            displayResultPopup(R.layout.otherdisease);
         } else if (diagnosis == 1) {
             result = " sick with COVID-19.";
-            runOnUiThread(() -> {
-                setContentView(R.layout.sick);
-                Button diagnoseButton = (Button) findViewById(R.id.diagnose);
-                Button exitButton = (Button) findViewById(R.id.exit);
-                diagnoseButton.setOnClickListener(v -> {
-                    restartProgram();
-                });
-                exitButton.setOnClickListener(v -> {
-                    exitProgram();
-                });
-            });
+            displayResultPopup(R.layout.sick);
         }
         updateChance(sickChance);
         if (hasSeriousSymptoms) {
@@ -404,6 +376,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
+                sayDiagnosis.async().run();
                 try {
                     qiChatbot.variable("diagnosis").setValue(finalResult1);
                 } catch (Exception e) {
@@ -412,22 +385,49 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             }
         });
         thread.start();
-        execFuture.requestCancellation();
-//        if(diagnoseAgain[0]) {
-//            execFuture = chatAction.async().run();
-//            runOnUiThread(() -> {setContentView(R.layout.activity_main);});
-//        } else {
-//            runOnUiThread(() -> {setContentView(R.layout.randomstuff);});
-//        }
+    }
+
+    public void displayMoreInfo() {
+        runOnUiThread(() -> {
+            setContentView(R.layout.testinginfo);
+            moreInfoBack = findViewById((R.id.moreInfoBack));
+            moreInfoBack.setOnClickListener(v -> {
+                displayResults(diagnosis);
+            });
+        });
+    }
+
+    public void displayResultPopup(int layoutId) {
+        runOnUiThread(() -> {
+            setContentView(layoutId);
+            Button diagnoseButton = (Button) findViewById(R.id.diagnose);
+            Button exitButton = (Button) findViewById(R.id.exit);
+            Button moreInfoButton = (Button) findViewById(R.id.moreInfo);
+
+            diagnoseButton.setOnClickListener(v -> {
+                restartDiagnosis();
+            });
+
+            exitButton.setOnClickListener(v -> {
+                exitProgram();
+            });
+
+            moreInfoButton.setOnClickListener(v -> {
+                displayMoreInfo();
+            });
+        });
     }
 
     public void updateChance(double sickChance) {
         TextView chanceText = (TextView) findViewById(R.id.sickChance);
         int intChance = (int) sickChance;
+        String chanceString = "";
         if (Math.abs(sickChance - intChance) < 0.01) {
-            chanceText.setText("Judging from your symptoms, there is an estimated " + Integer.toString(intChance) + "% chance you have COVID-19 or a similar disease.*");
+            chanceString = Integer.toString(intChance);
+            chanceText.setText("Judging from your symptoms, there is an estimated " + chanceString + "% chance you have COVID-19 or a similar disease.*");
         } else {
-            chanceText.setText("Judging from your symptoms, there is an estimated " + String.format("%.2f", sickChance * 100) + "% chance you have COVID-19 or a similar disease.*");
+            chanceString = String.format("%.2f", sickChance * 100);
+            chanceText.setText("Judging from your symptoms, there is an estimated " + chanceString + "% chance you have COVID-19 or a similar disease.*");
 
         }
     }
@@ -435,24 +435,56 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     public void updateDisclaimer() {
         TextView disclaimer = (TextView) findViewById(R.id.disclaimer);
         disclaimer.setWidth(900);
-        disclaimer.setText("Note: you appear to be suffering from symptoms that could potentially be signs of a serious condition. Please contact a doctor or hospital immediately.");
+        String disclaimerText = "Note: you appear to be suffering from symptoms that could potentially be signs of a serious condition. Please contact a doctor or hospital immediately.";
+        disclaimer.setText(disclaimerText);
     }
 
-    public void restartProgram() {
+    public void restartDiagnosis() {
         diagnosisBot.resetBot();
+        try {
+            Thread.sleep(1500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         TextView disclaimer = (TextView) findViewById(R.id.disclaimer);
         disclaimer.setWidth(790);
-        initShortenedDiagnosis();
         runOnUiThread(() -> {
             instructions.async().run();
-            execFuture = chatAction2.async().run();
-//          setContentView(R.layout.activity_main);
+            execFuture = diagnosisChat.async().run();
         });
+        resetVariables();
         displayCheckboxes();
+    }
+
+    public void resetVariables() {
+        diagnosis = -2;
+        numSymptoms = 0;
+        sickChance = 0.00;
+        diagnosisDone = false;
+        inMoreInfo = false;
+        hasSeriousSymptoms = false;
+    }
+
+    public void resetProgram() {
+        resetVariables();
+        execFuture.requestCancellation();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        execFuture = chatAction.async().run();
+        setContentView(R.layout.activity_main);
     }
 
     public void exitProgram() {
         runOnUiThread(() -> setContentView(R.layout.randomstuff));
         thankyou.async().run();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        resetProgram();
     }
 }

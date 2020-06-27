@@ -22,7 +22,7 @@ public class Diagnosis {
         double sickProb = 1.0;
         for (int i = 0; i < prioritySymptoms.length; i++) {
             if (!prioritySymptoms[i]) {
-                sickProb = sickProb * (1.0 - priorityProbabilities[i]);
+                sickProb = sickProb * (1.0 - (0.9 * priorityProbabilities[i]));
             }
         }
         for (int i = 0; i < secondarySymptoms.length; i++) {

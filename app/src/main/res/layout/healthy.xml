@@ -36,8 +36,8 @@
         android:id="@+id/exit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="556dp"
-        android:layout_marginTop="388dp"
+        android:layout_marginStart="640dp"
+        android:layout_marginTop="392dp"
         android:text="Exit"
         android:textSize="30sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -47,9 +47,20 @@
         android:id="@+id/diagnose"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="308dp"
-        android:layout_marginTop="388dp"
+        android:layout_marginStart="192dp"
+        android:layout_marginTop="392dp"
         android:text="Re-diagnose"
+        android:textSize="30sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/moreInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="432dp"
+        android:layout_marginTop="392dp"
+        android:text="More Info"
         android:textSize="30sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

@@ -5,129 +5,56 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/stop1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
-        android:text="+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#FF0000"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.484"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/stop2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="120dp"
-        android:text="+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#FF7F00"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.484"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/stop3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="140dp"
-        android:text="+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#FFFF00"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.484"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/stop4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="160dp"
-        android:text="+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#00FF00"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.484"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/stop5"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="180dp"
-        android:text="+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#0000FF"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.484"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/stop6"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="200dp"
-        android:text="+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#4B0082"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.484"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/stop7"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="220dp"
-        android:text="+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#9400D3"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.484"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="276dp"
+        android:layout_height="333dp"
+        android:layout_marginTop="17dp"
+        app:layout_constraintEnd_toStartOf="@+id/stop8"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/stop8"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/barfingrainbow" />
 
     <TextView
         android:id="@+id/stop8"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="300dp"
-        android:text="\t\t\t\t\t\t\t\t\t\t\tYou are not sick! \n You are trying to get out of school!"
+        android:layout_marginTop="348dp"
+        android:text="You're not sick! \n You're just trying to get out of school!"
+        android:textAlignment="center"
         android:textColor="#9A1616"
-        android:textSize="60sp"
+        android:textSize="36sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.484"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-<!--    <ImageView-->
-<!--        android:id="@+id/rainbow"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_marginBottom="16dp"-->
-<!--        android:contentDescription="picture"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:srcCompat="@drawable/rb"-->
-<!--        tools:ignore="HardcodedText"-->
-<!--        tools:srcCompat="@drawable/rb" />-->
+    <Button
+        android:id="@+id/returnButton"
+        android:layout_width="157dp"
+        android:layout_height="52dp"
+        android:layout_marginTop="452dp"
+        android:background="#80DDDD"
+        android:backgroundTint="#DCC384"
+        android:text="Return Home"
+        android:textColor="#000000"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!--    <ImageView-->
+    <!--        android:id="@+id/rainbow"-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_marginBottom="16dp"-->
+    <!--        android:contentDescription="picture"-->
+    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:srcCompat="@drawable/rb"-->
+    <!--        tools:ignore="HardcodedText"-->
+    <!--        tools:srcCompat="@drawable/rb" />-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
